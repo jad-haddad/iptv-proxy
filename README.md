@@ -12,11 +12,11 @@ Jellyfin URLs:
 - M3U: `http://<server>:8080/lebanon.m3u`
 - EPG: `http://<server>:8080/epg.xml`
 
-Docker:
+Docker (public image):
 
 ```bash
-docker build -t iptv-mtv .
-docker run --rm -p 8080:8080 iptv-mtv
+docker pull ghcr.io/jad-haddad/iptv-proxy:latest
+docker run --rm -p 8080:8080 ghcr.io/jad-haddad/iptv-proxy:latest
 ```
 
 ## Overview
@@ -64,11 +64,18 @@ Environment variables:
 
 ## Docker
 
-Build and run:
+Build and run locally:
 
 ```bash
-docker build -t iptv-mtv .
-docker run --rm -p 8080:8080 iptv-mtv
+docker build -t iptv-proxy .
+docker run --rm -p 8080:8080 iptv-proxy
+```
+
+Pull and run the public image:
+
+```bash
+docker pull ghcr.io/jad-haddad/iptv-proxy:latest
+docker run --rm -p 8080:8080 ghcr.io/jad-haddad/iptv-proxy:latest
 ```
 
 The image includes a healthcheck against `http://127.0.0.1:8080/health`.
@@ -77,8 +84,8 @@ The image includes a healthcheck against `http://127.0.0.1:8080/health`.
 
 ```yaml
 services:
-  iptv-mtv:
-    build: .
+  iptv-proxy:
+    image: ghcr.io/jad-haddad/iptv-proxy:latest
     ports:
       - "8080:8080"
 ```
