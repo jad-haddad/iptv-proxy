@@ -1,0 +1,10 @@
+[project]
+name = "iptv-proxy"
+version = "0.1.0"
+description = "Filter IPTV playlists and serve MTV Lebanon EPG"
+requires-python = ">=3.14"
+dependencies = [
+  "fastapi>=0.115.0",
+  "httpx>=0.27.0",
+  "uvicorn>=0.30.0",
+]
