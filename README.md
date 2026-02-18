@@ -88,6 +88,18 @@ services:
     image: ghcr.io/jad-haddad/iptv-proxy:latest
     ports:
       - "8080:8080"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health').read()",
+        ]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
 ```
 
 ## Validation
