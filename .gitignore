@@ -1,5 +1,6 @@
 .DS_Store
 iptv-proxy
+!cmd/iptv-proxy/
 iptv-proxy.exe
 *.test
 *.out
