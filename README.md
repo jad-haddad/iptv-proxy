@@ -101,6 +101,15 @@ Run the integration check (validates 200 responses and ETag 304 behavior):
 go run ./scripts/check_endpoints.go http://127.0.0.1:8080
 ```
 
+## Logging
+
+Request logs are written to stdout so Docker captures them.
+Successful `/health` checks are intentionally skipped to reduce noise.
+
+```bash
+docker compose logs --no-color iptv-proxy
+```
+
 ## Troubleshooting
 
 - Port already in use: choose another host port in the Docker run mapping.

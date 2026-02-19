@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"time"
@@ -42,7 +43,7 @@ func New(cfg config.Config) (*http.Server, error) {
 
 	return &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: logRequests(mux),
 	}, nil
 }
 
@@ -239,4 +240,36 @@ func setCacheHeaders(w http.ResponseWriter, etag string) {
 	}
 	w.Header().Set("ETag", etag)
 	w.Header().Set("Cache-Control", "no-cache")
+}
+
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (w *loggingResponseWriter) WriteHeader(code int) {
+	w.status = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+func (w *loggingResponseWriter) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.status = http.StatusOK
+	}
+	return w.ResponseWriter.Write(b)
+}
+
+func logRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		wrapped := &loggingResponseWriter{ResponseWriter: w}
+		next.ServeHTTP(wrapped, r)
+		if wrapped.status == 0 {
+			wrapped.status = http.StatusOK
+		}
+		if r.URL.Path == "/health" && wrapped.status == http.StatusOK {
+			return
+		}
+		log.Printf("%s %s status=%d duration=%s", r.Method, r.URL.Path, wrapped.status, time.Since(start))
+	})
 }

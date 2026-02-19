@@ -1,0 +1,11 @@
+services:
+  iptv-proxy:
+    image: ghcr.io/jad-haddad/iptv-proxy:latest
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "/iptv-proxy", "healthcheck"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
