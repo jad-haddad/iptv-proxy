@@ -1,20 +1,21 @@
-FROM python:3.14-slim
+FROM golang:1.22-alpine AS build
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+WORKDIR /src
+COPY go.mod ./
+RUN go mod download
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
 
-WORKDIR /app
+ENV CGO_ENABLED=0
+RUN go build -ldflags "-s -w" -o /out/iptv-proxy ./cmd/iptv-proxy
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project
+FROM alpine:3.20 AS certs
+RUN apk add --no-cache ca-certificates
 
-ADD . /app
-
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen
-
+FROM scratch
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /out/iptv-proxy /iptv-proxy
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health').read()"
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+  CMD ["/iptv-proxy", "healthcheck"]
+ENTRYPOINT ["/iptv-proxy"]

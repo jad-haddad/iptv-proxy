@@ -1,7 +1,6 @@
-__pycache__
-*.pyc
-.venv
-.uv
 .git
 .gitignore
 README.md
+iptv-proxy
+*.test
+*.out

@@ -3,8 +3,7 @@
 ## Quickstart
 
 ```bash
-uv sync
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8080
+go run ./cmd/iptv-proxy
 ```
 
 Jellyfin URLs:
@@ -78,8 +77,6 @@ docker pull ghcr.io/jad-haddad/iptv-proxy:latest
 docker run --rm -p 8080:8080 ghcr.io/jad-haddad/iptv-proxy:latest
 ```
 
-The image includes a healthcheck against `http://127.0.0.1:8080/health`.
-
 ### Docker Compose
 
 ```yaml
@@ -89,13 +86,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health').read()",
-        ]
+      test: ["CMD", "/iptv-proxy", "healthcheck"]
       interval: 30s
       timeout: 3s
       start_period: 5s
@@ -107,11 +98,11 @@ services:
 Run the integration check (validates 200 responses and ETag 304 behavior):
 
 ```bash
-uv run python scripts/check_endpoints.py http://127.0.0.1:8080
+go run ./scripts/check_endpoints.go http://127.0.0.1:8080
 ```
 
 ## Troubleshooting
 
-- Port already in use: choose another port in the uvicorn command or Docker run.
+- Port already in use: choose another host port in the Docker run mapping.
 - No EPG data: verify the upstream EPG URL is reachable.
 - MTV not matched: adjust `MTV_REGEX` to match new playlist metadata.

@@ -1,5 +1,5 @@
-__pycache__
-*.pyc
-.venv
-.uv
 .DS_Store
+iptv-proxy
+iptv-proxy.exe
+*.test
+*.out
