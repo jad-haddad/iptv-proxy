@@ -14,6 +14,7 @@ import (
 	"github.com/jad-haddad/iptv-proxy/internal/config"
 	"github.com/jad-haddad/iptv-proxy/internal/epg"
 	"github.com/jad-haddad/iptv-proxy/internal/m3u"
+	"github.com/jad-haddad/iptv-proxy/internal/mtv"
 )
 
 type Server struct {
@@ -155,65 +156,20 @@ func (s *Server) getEPG(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, s.cfg.EPGURL, nil)
+	programmes, err := mtv.FetchSchedule(s.client, s.cfg.MTVBaseURL, time.Now())
 	if err != nil {
+		log.Printf("EPG fetch error: %v", err)
 		http.Error(w, "Upstream EPG unavailable", http.StatusBadGateway)
 		return
 	}
-	if s.epgCache.UpstreamETag != "" {
-		req.Header.Set("If-None-Match", s.epgCache.UpstreamETag)
-	}
 
-	resp, err := s.client.Do(req)
+	filtered, err := epg.GenerateXML(programmes, s.cfg.MTVTVGID, s.cfg.MTVTVGName)
 	if err != nil {
-		http.Error(w, "Upstream EPG unavailable", http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotModified {
-		if s.epgCache.FilteredBody != nil {
-			s.epgCache.LastFetch = now
-			if r.Header.Get("If-None-Match") == s.epgCache.FilteredETag {
-				w.WriteHeader(http.StatusNotModified)
-				return
-			}
-			w.Header().Set("Content-Type", "application/xml")
-			setCacheHeaders(w, s.epgCache.FilteredETag)
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(s.epgCache.FilteredBody)
-			return
-		}
-		req, err = http.NewRequest(http.MethodGet, s.cfg.EPGURL, nil)
-		if err != nil {
-			http.Error(w, "Upstream EPG unavailable", http.StatusBadGateway)
-			return
-		}
-		resp, err = s.client.Do(req)
-		if err != nil {
-			http.Error(w, "Upstream EPG unavailable", http.StatusBadGateway)
-			return
-		}
-		defer resp.Body.Close()
-	}
-
-	if resp.StatusCode != http.StatusOK {
+		log.Printf("EPG generate error: %v", err)
 		http.Error(w, "Upstream EPG unavailable", http.StatusBadGateway)
 		return
 	}
 
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		http.Error(w, "Upstream EPG unavailable", http.StatusBadGateway)
-		return
-	}
-
-	s.epgCache.UpstreamETag = resp.Header.Get("ETag")
-	filtered, err := epg.Filter(raw, s.cfg.MTVTVGID, s.cfg.MTVTVGName)
-	if err != nil {
-		http.Error(w, "Upstream EPG unavailable", http.StatusBadGateway)
-		return
-	}
 	s.epgCache.FilteredBody = filtered
 	s.epgCache.FilteredETag = etagFor(filtered)
 	s.epgCache.LastFetch = now

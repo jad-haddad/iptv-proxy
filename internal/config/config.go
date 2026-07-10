@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	M3UURL                string
-	EPGURL                string
+	MTVBaseURL            string
 	MTVRegex              string
 	MTVTVGID              string
 	MTVTVGName            string
@@ -19,7 +19,7 @@ type Config struct {
 func Load() Config {
 	return Config{
 		M3UURL:                getEnv("M3U_URL", "https://iptv-org.github.io/iptv/countries/lb.m3u"),
-		EPGURL:                getEnv("EPG_URL", "https://mdag9904.github.io/lebanon-epg/epg.xml"),
+		MTVBaseURL:            getEnv("MTV_BASE_URL", "https://www.mtv.com.lb"),
 		MTVRegex:              getEnv("MTV_REGEX", `(?i)\bmtv\b.*\blebanon\b|mtv\s*lebanon|mtvlebanon`),
 		MTVTVGID:              getEnv("MTV_TVG_ID", "mtvlebanon.lb"),
 		MTVTVGName:            getEnv("MTV_TVG_NAME", "MTV Lebanon"),

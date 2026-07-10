@@ -1,6 +1,8 @@
 services:
   iptv-proxy:
     image: ghcr.io/jad-haddad/iptv-proxy:latest
+    environment:
+      MTV_BASE_URL: https://www.mtv.com.lb
     ports:
       - "8080:8080"
     healthcheck:
