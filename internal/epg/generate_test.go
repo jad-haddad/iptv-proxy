@@ -159,3 +159,85 @@ func TestGenerateXML_ProgrammeOrder(t *testing.T) {
 		t.Error("programmes should appear in input order; First found after Second")
 	}
 }
+
+func TestGenerateXML_WithIcon(t *testing.T) {
+	loc := time.FixedZone("EEST", 3*3600)
+	programmes := []Programme{
+		{
+			Title: "Show With Icon",
+			Icon:  "https://imagescdn.mtv.com.lb/programs/test.jpg",
+			Start: time.Date(2026, 7, 10, 7, 30, 0, 0, loc),
+			Stop:  time.Date(2026, 7, 10, 8, 0, 0, 0, loc),
+		},
+	}
+
+	out, err := GenerateXML(programmes, "ch", "Channel")
+	if err != nil {
+		t.Fatalf("GenerateXML: %v", err)
+	}
+
+	if !strings.Contains(string(out), `<icon src="https://imagescdn.mtv.com.lb/programs/test.jpg"`) {
+		t.Error("output missing icon element with src attribute")
+	}
+}
+
+func TestGenerateXML_NoIcon(t *testing.T) {
+	loc := time.FixedZone("EEST", 3*3600)
+	programmes := []Programme{
+		{
+			Title: "Show No Icon",
+			Start: time.Date(2026, 7, 10, 7, 30, 0, 0, loc),
+			Stop:  time.Date(2026, 7, 10, 8, 0, 0, 0, loc),
+		},
+	}
+
+	out, err := GenerateXML(programmes, "ch", "Channel")
+	if err != nil {
+		t.Fatalf("GenerateXML: %v", err)
+	}
+
+	if strings.Contains(string(out), `<icon`) {
+		t.Error("output should not contain icon element for empty Icon")
+	}
+}
+
+func TestGenerateXML_Rerun(t *testing.T) {
+	loc := time.FixedZone("EEST", 3*3600)
+	programmes := []Programme{
+		{
+			Title:   "Evening Rerun",
+			IsRerun: true,
+			Start:   time.Date(2026, 7, 10, 18, 0, 0, 0, loc),
+			Stop:    time.Date(2026, 7, 10, 19, 0, 0, 0, loc),
+		},
+	}
+
+	out, err := GenerateXML(programmes, "ch", "Channel")
+	if err != nil {
+		t.Fatalf("GenerateXML: %v", err)
+	}
+
+	if !strings.Contains(string(out), `<previously-shown`) {
+		t.Error("output missing previously-shown element for rerun programme")
+	}
+}
+
+func TestGenerateXML_NotRerun(t *testing.T) {
+	loc := time.FixedZone("EEST", 3*3600)
+	programmes := []Programme{
+		{
+			Title: "Live Show",
+			Start: time.Date(2026, 7, 10, 20, 0, 0, 0, loc),
+			Stop:  time.Date(2026, 7, 10, 21, 0, 0, 0, loc),
+		},
+	}
+
+	out, err := GenerateXML(programmes, "ch", "Channel")
+	if err != nil {
+		t.Fatalf("GenerateXML: %v", err)
+	}
+
+	if strings.Contains(string(out), `<previously-shown`) {
+		t.Error("output should not contain previously-shown for non-rerun programme")
+	}
+}

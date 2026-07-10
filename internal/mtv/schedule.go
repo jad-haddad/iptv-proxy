@@ -73,12 +73,27 @@ func FetchSchedule(client *http.Client, baseURL string, now time.Time) ([]epg.Pr
 		programmes = append(programmes, epg.Programme{
 			Title:       e.entry.Program.Name,
 			Description: e.entry.Program.Description,
+			Icon:        resolveIcon(e.entry),
+			IsRerun:     e.entry.IsRerun != nil && *e.entry.IsRerun,
 			Start:       start,
 			Stop:        stop,
 		})
 	}
 
 	return programmes, nil
+}
+
+func resolveIcon(e scheduleEntry) string {
+	if e.Season != nil && e.Season.MainPic != nil && *e.Season.MainPic != "" {
+		return *e.Season.MainPic
+	}
+	if e.Program.MainPic != nil && *e.Program.MainPic != "" {
+		return "https://www.mtv.com.lb/" + *e.Program.MainPic
+	}
+	if e.Program.LogoPic != nil && *e.Program.LogoPic != "" {
+		return "https://www.mtv.com.lb/" + *e.Program.LogoPic
+	}
+	return ""
 }
 
 func fetchDays(client *http.Client, baseURL string) (daysResponse, error) {

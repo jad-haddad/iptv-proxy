@@ -8,6 +8,8 @@ import (
 type Programme struct {
 	Title       string
 	Description string
+	Icon        string
+	IsRerun     bool
 	Start       time.Time
 	Stop        time.Time
 }
@@ -23,24 +25,39 @@ type channel struct {
 	DisplayName string `xml:"display-name"`
 }
 
+type icon struct {
+	Src string `xml:"src,attr"`
+}
+
+type previouslyShown struct{}
+
 type tvProgramme struct {
-	Channel string `xml:"channel,attr"`
-	Start   string `xml:"start,attr"`
-	Stop    string `xml:"stop,attr"`
-	Title   string `xml:"title"`
-	Desc    string `xml:"desc,omitempty"`
+	Channel         string           `xml:"channel,attr"`
+	Start           string           `xml:"start,attr"`
+	Stop            string           `xml:"stop,attr"`
+	Title           string           `xml:"title"`
+	Desc            string           `xml:"desc,omitempty"`
+	Icon            *icon            `xml:"icon,omitempty"`
+	PreviouslyShown *previouslyShown `xml:"previously-shown,omitempty"`
 }
 
 func GenerateXML(programmes []Programme, channelID, channelName string) ([]byte, error) {
 	tvProgs := make([]tvProgramme, len(programmes))
 	for i, p := range programmes {
-		tvProgs[i] = tvProgramme{
+		prog := tvProgramme{
 			Channel: channelID,
 			Start:   p.Start.Format("20060102150405 -0700"),
 			Stop:    p.Stop.Format("20060102150405 -0700"),
 			Title:   p.Title,
 			Desc:    p.Description,
 		}
+		if p.Icon != "" {
+			prog.Icon = &icon{Src: p.Icon}
+		}
+		if p.IsRerun {
+			prog.PreviouslyShown = &previouslyShown{}
+		}
+		tvProgs[i] = prog
 	}
 
 	doc := tv{
